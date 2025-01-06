@@ -46,6 +46,16 @@ class MyAppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void removeFavorite(WordPair pair) {
+    favorites.remove(pair);
+    notifyListeners();
+  }
+
+  void removeAllFavorites() {
+    favorites.clear();
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -64,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = GeneratorPage();
         break;
       case 1:
-        page = Placeholder();
+        page = FavoritesPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -171,5 +181,82 @@ class BigCard extends StatelessWidget {
         child: Text(pair.asLowerCase, style: style, semanticsLabel: pair.asString),
       ),
     );
+  }
+}
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    if (appState.favorites.isEmpty) {
+    return Center(
+      child: Text('No favorites yet.'),
+    );
+  }
+  var theme = Theme.of(context);
+  var style = theme.textTheme.displaySmall!.copyWith(
+      color: theme.colorScheme.primary,
+    );
+  var children = [
+      Padding(padding: const EdgeInsets.all(20),
+      child:  Card( color: theme.colorScheme.primary, child: Padding(padding: const EdgeInsets.all(20),
+      child: Column(children: [Text('You have ${appState.favorites.length} favorites:', style: theme.textTheme.displaySmall!.copyWith(color: theme.colorScheme.onPrimary),)
+      ,DeleteAllButton(),
+      ]
+      
+    
+      ,),),),
+      ),
+      Column(
+        children: [
+          for (var pair in appState.favorites) Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(pair.asLowerCase, style: style),
+                  SizedBox(width: 10),
+                  Icon(Icons.favorite, color: Colors.red),
+                  EliminationButton(pair: pair),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ];
+  return ListView(
+    children: children,
+  );
+}
+}
+
+class EliminationButton extends StatelessWidget {
+  const EliminationButton({
+    super.key,
+    required this.pair,
+  });
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    return IconButton(
+      icon: Icon(Icons.delete),
+      onPressed: () {
+        appState.removeFavorite(pair);
+      },
+    );
+  }
+}
+
+class DeleteAllButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(icon: Icon(Icons.delete_forever), onPressed: () {
+      context.read<MyAppState>().removeAllFavorites();
+    },);
   }
 }
